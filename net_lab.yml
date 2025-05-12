@@ -1,0 +1,76 @@
+---
+- name: Configure inetRouter
+  hosts: inetRouter
+  become: true
+
+  tasks:
+ 
+  - name: Stop_firewall
+    ansible.builtin.systemd_service:
+     name: ufw
+     state: stopped
+     enabled: false
+
+  - name: Copy iptables_rules
+    template:
+      src: "./templates/iptables_rules.j2"
+      dest: "/etc/iptables_rules.ipv4"
+      owner: root
+      group: root
+      mode: 0644
+  
+  - name: Copy iptable_restore   
+    template:
+      src: "./templates/iptables_restore.j2"
+      dest: "/etc/network/if-pre-up.d/iptables"
+      mode: 0755
+
+- name: Configure ip forward
+  hosts: routers
+  become: true
+
+  tasks:
+
+  - name: set up forward packages across routers
+    ansible.posix.sysctl:
+      name: net.ipv4.ip_forward
+      value: '1'
+      sysctl_set: true
+      state: present
+
+- name: Configure routes
+
+  hosts: all
+  become: true
+
+  tasks:
+
+  - name: Install soft
+    apt:
+      name:
+        - traceroute
+        - mc
+        - curl
+      state: present
+      update_cache: true
+
+  - name: disable default route
+    template: 
+      src: "./templates/00-installer-config.yaml"
+      dest: /etc/netplan/00-installer-config.yaml
+      owner: root
+      group: root
+      mode: 0644
+    when: (ansible_hostname != "inetRouter") 
+
+  - name: Copy from templates
+    template: 
+      src: "./templates/50-vagrant_{{ansible_hostname}}.yaml"
+      dest: /etc/netplan/50-vagrant.yaml
+      owner: root
+      group: root
+      mode: 0644
+
+  - name: restart all hosts
+    reboot:
+      reboot_timeout: 600

@@ -16,3 +16,9 @@ Vagrantfile + ansible workbook net_lab.yml
 
 ![Image alt](https://github.com/AlexndrVakulenko/homework19/blob/main/04_traceroute_8_8_8_8.png)
 
+
+##Теоретическая часть
+
+Расчет сетей. Свободные сети выделены цветом.
+
+![Image alt](https://github.com/AlexndrVakulenko/homework19/blob/main/Network.png)
